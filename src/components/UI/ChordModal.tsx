@@ -14,27 +14,35 @@ interface ChordModalProps {
   setShowChords?: (show: boolean) => void;
 }
 
-// Chord categories with counts
-const chordCategories = [
+// Get filtered chords based on selected root note and category
+const getFilteredChords = (rootNote: string | null, categoryType: string) => {
+  if (!rootNote) return [];
+  return Object.keys(CHORDS).filter(chord => 
+    chord.startsWith(rootNote) && chord.includes(categoryType)
+  );
+};
+
+// Chord categories with dynamic counts
+const getChordCategories = (rootNote: string | null) => [
   {
     name: "Major Chords",
     type: "Major",
-    count: Object.keys(CHORDS).filter(chord => chord.includes('Major')).length
+    count: getFilteredChords(rootNote, "Major").filter(chord => !chord.includes("Suspended")).length
   },
   {
     name: "Minor Chords",
     type: "Minor",
-    count: Object.keys(CHORDS).filter(chord => chord.includes('Minor')).length
+    count: getFilteredChords(rootNote, "Minor").length
   },
   {
     name: "Suspended Chords",
     type: "Suspended",
-    count: Object.keys(CHORDS).filter(chord => chord.includes('Suspended')).length
+    count: getFilteredChords(rootNote, "Suspended").length
   },
   {
     name: "Power Chords",
     type: "Power",
-    count: Object.keys(CHORDS).filter(chord => chord.includes('Power')).length
+    count: getFilteredChords(rootNote, "Power").length
   }
 ];
 
@@ -58,6 +66,9 @@ const ChordModal: React.FC<ChordModalProps> = ({
     positions: { string: number; fret: number; finger?: number }[];
     description: string;
   } | null>(null);
+
+  // Get chord categories with dynamic counts
+  const chordCategories = getChordCategories(selectedNote);
 
   // Get filtered chords based on selected root note and category
   const getFilteredChords = () => {

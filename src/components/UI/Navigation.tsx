@@ -32,7 +32,7 @@ const Navigation: React.FC = () => {
             className="text-2xl font-bold text-white animate-neon-pulse" 
             style={{ fontFamily: "'Metal Mania', cursive" }}
           >
-            Guitar God
+            Guitar Gods
           </span>
         </div>
         
