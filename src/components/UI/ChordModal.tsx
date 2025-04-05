@@ -4,93 +4,47 @@ import { X, Info, Play, ChevronRight, GalleryVerticalEnd, PanelRight, BookOpen }
 import { cn } from '../../lib/utils';
 import useGuitarStore from '../../store/useGuitarStore';
 import { useStringAudio } from '../../hooks/useAudio';
-import { NOTES, SCALES, CHORDS, getNoteAtFret } from '../../lib/utils';
+import { NOTES, CHORDS } from '../../lib/utils';
 import Modal from './Modal';
 
-interface ScalesModalProps {
+interface ChordModalProps {
   isOpen: boolean;
   onClose: () => void;
   setSelectedChord: (chord: string) => void;
   setShowChords?: (show: boolean) => void;
 }
 
-// Calculate scale counts dynamically based on what's available in the SCALES object
-const majorScales = Object.keys(SCALES).filter(scale => scale.includes('Major') && !scale.includes('Pentatonic'));
-const minorScales = Object.keys(SCALES).filter(scale => scale.includes('Minor') && !scale.includes('Pentatonic') && !scale.includes('Harmonic') && !scale.includes('Melodic'));
-const modeScales = Object.keys(SCALES).filter(scale => 
-  scale.includes('Dorian') || 
-  scale.includes('Phrygian') || 
-  scale.includes('Lydian') || 
-  scale.includes('Mixolydian') || 
-  scale.includes('Locrian')
-);
-const harmonicMelodicScales = Object.keys(SCALES).filter(scale => scale.includes('Harmonic') || scale.includes('Melodic'));
-const pentatonicScales = Object.keys(SCALES).filter(scale => scale.includes('Pentatonic'));
-const bluesScales = Object.keys(SCALES).filter(scale => scale.includes('Blues'));
-
-// Group scales by type with actual counts
-const scaleCategories = [
+// Chord categories with counts
+const chordCategories = [
   {
-    name: "Major Scales (Ionian)",
-    scales: majorScales,
-    count: majorScales.length
+    name: "Major Chords",
+    type: "Major",
+    count: Object.keys(CHORDS).filter(chord => chord.includes('Major')).length
   },
   {
-    name: "Minor Scales (Aeolian)",
-    scales: minorScales,
-    count: minorScales.length
+    name: "Minor Chords",
+    type: "Minor",
+    count: Object.keys(CHORDS).filter(chord => chord.includes('Minor')).length
   },
   {
-    name: "Additional Modes",
-    scales: modeScales,
-    count: modeScales.length
+    name: "Suspended Chords",
+    type: "Suspended",
+    count: Object.keys(CHORDS).filter(chord => chord.includes('Suspended')).length
   },
   {
-    name: "Harmonic & Melodic Minor",
-    scales: harmonicMelodicScales,
-    count: harmonicMelodicScales.length
-  },
-  {
-    name: "Pentatonic Scales",
-    scales: pentatonicScales,
-    count: pentatonicScales.length
-  },
-  {
-    name: "Blues Scales",
-    scales: bluesScales,
-    count: bluesScales.length
+    name: "Power Chords",
+    type: "Power",
+    count: Object.keys(CHORDS).filter(chord => chord.includes('Power')).length
   }
 ];
 
-// Filter scales based on selected root note
-const filterScalesByRoot = (scales: string[], rootNote: string): string[] => {
-  if (!rootNote) return scales;
-  
-  return scales.filter(scale => {
-    const scaleParts = scale.split(' ');
-    return scaleParts[0] === rootNote;
-  });
-};
-
-// Type definition for scale information
-interface ScaleInfo {
-  name: string;
-  notes: string[];
-  type: string;
-  description: string;
-  commonChords: string[];
-  modes?: string[];
-}
-
-const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedChord, setShowChords }) => {
-  const { 
-    selectedNote, 
-    setSelectedScale,
-    theme,
-    tuning,
-    selectedScale
-  } = useGuitarStore();
-  
+const ChordModal: React.FC<ChordModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  setSelectedChord,
+  setShowChords 
+}) => {
+  const { selectedNote } = useGuitarStore();
   const { playString } = useStringAudio();
   
   // State for the modal
@@ -105,74 +59,52 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
     description: string;
   } | null>(null);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log('State changed:', {
-      selectedCategory: activeCategory,
-      selectedChordType,
-      showDetails,
-      chordInfo: chordInfo?.name
-    });
-  }, [activeCategory, selectedChordType, showDetails, chordInfo]);
+  // Get filtered chords based on selected root note and category
+  const getFilteredChords = () => {
+    if (!selectedNote) return [];
+    
+    const categoryType = chordCategories[activeCategory].type;
+    return Object.keys(CHORDS).filter(chord => 
+      chord.startsWith(selectedNote) && chord.includes(categoryType)
+    );
+  };
 
   // Handle chord selection
-  const handleChordSelect = (chordType: string) => {
-    console.log('handleChordSelect called with:', chordType);
+  const handleChordSelect = (chord: string) => {
+    if (!selectedNote) return;
     
-    if (!selectedNote) {
-      console.log('No selected note, returning');
-      return;
-    }
-    
-    const fullChordName = `${selectedNote} ${chordType}`;
-    console.log('Setting selected chord type:', chordType);
-    setSelectedChordType(chordType);
+    setSelectedChordType(chord);
     
     // Get chord information
-    const chordNotes = CHORDS[fullChordName as keyof typeof CHORDS] || [];
-    
-    // Get chord positions
-    const positions = [];
-    for (let string = 0; string < tuning.length; string++) {
-      for (let fret = 0; fret <= 12; fret++) {
-        const noteAtFret = getNoteAtFret(tuning[string], fret);
-        if (chordNotes.includes(noteAtFret)) {
-          positions.push({ string, fret });
-        }
-      }
-    }
+    const chordNotes = CHORDS[chord as keyof typeof CHORDS] || [];
     
     // Set chord info
     const info = {
-      name: fullChordName,
+      name: chord,
       notes: chordNotes,
       intervals: chordNotes.map((note, i) => {
         if (i === 0) return 'Root';
-        if (i === 1) return chordType.includes('Minor') ? 'Minor 3rd' : 'Major 3rd';
+        if (i === 1) return chord.includes('Minor') ? 'Minor 3rd' : 'Major 3rd';
         if (i === 2) return 'Perfect 5th';
         return `Extension ${i + 1}`;
       }),
-      positions,
-      description: `The ${fullChordName} chord consists of the notes ${chordNotes.join(', ')}. ${
-        chordType.includes('Minor') 
+      positions: [],
+      description: `The ${chord} chord consists of the notes ${chordNotes.join(', ')}. ${
+        chord.includes('Minor') 
           ? 'It has a darker, more melancholic sound.'
           : 'It has a bright, stable sound.'
       }`
     };
     
-    console.log('Setting chord info:', info);
     setChordInfo(info);
-    
-    console.log('Setting showDetails to true');
     setShowDetails(true);
   };
 
   // Apply chord to fretboard
   const handleApplyChord = () => {
-    if (!selectedNote || !selectedChordType) return;
+    if (!selectedChordType) return;
     
-    const fullChordName = `${selectedNote} ${selectedChordType}`;
-    setSelectedChord(fullChordName);
+    setSelectedChord(selectedChordType);
     if (setShowChords) {
       setShowChords(true);
     }
@@ -184,17 +116,11 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
     if (!chordInfo) return;
     
     // Play root note first
-    const rootPosition = chordInfo.positions[0];
-    if (rootPosition) {
-      playString(rootPosition.string, rootPosition.fret);
-    }
+    playString(5, 0); // Low E string open
     
     // Play other chord tones in sequence
-    chordInfo.positions.slice(1).forEach((pos, index) => {
-      setTimeout(() => {
-        playString(pos.string, pos.fret);
-      }, (index + 1) * 200);
-    });
+    setTimeout(() => playString(4, 2), 200); // A string 2nd fret
+    setTimeout(() => playString(3, 2), 400); // D string 2nd fret
   };
 
   return (
@@ -209,7 +135,7 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
         {/* Left sidebar - Chord categories */}
         <div className="w-full md:w-52 border-b md:border-b-0 md:border-r border-gray-200 dark:border-metal-darkest pb-4 md:pb-0 md:pr-4">
           <nav className="p-2 space-y-1">
-            {scaleCategories.map((category, index) => (
+            {chordCategories.map((category, index) => (
               <button
                 key={category.name}
                 className={cn(
@@ -234,34 +160,40 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Scale list */}
+          {/* Chord list */}
           {!showDetails ? (
             <div className="flex-1 overflow-y-auto p-4">
               <h3 className="text-lg font-bold text-gray-800 dark:text-metal-lightblue mb-4">
-                {scaleCategories[activeCategory].name}
+                {chordCategories[activeCategory].name}
               </h3>
 
+              {selectedNote && getFilteredChords().length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-metal-silver">
+                    No chords found for {selectedNote} in this category
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {scaleCategories[activeCategory].scales.map((scale) => (
+                {getFilteredChords().map((chord) => (
                   <button
-                    key={scale}
+                    key={chord}
                     className={cn(
                       "p-3 text-left rounded-md transition-colors border flex justify-between items-center",
-                      selectedChordType === scale
+                      selectedChordType === chord
                         ? "bg-blue-50 dark:bg-metal-dark border-blue-200 dark:border-metal-blue"
                         : "border-gray-200 dark:border-metal-darkest hover:bg-gray-50 dark:hover:bg-metal-darkest"
                     )}
-                    onClick={() => handleChordSelect(scale)}
+                    onClick={() => handleChordSelect(chord)}
                   >
                     <div>
                       <div className="font-medium text-gray-800 dark:text-metal-lightblue">
-                        {scale}
+                        {chord}
                       </div>
-                      {selectedNote && (
-                        <div className="text-sm text-gray-500 dark:text-metal-silver mt-1">
-                          {CHORDS[`${selectedNote} ${scale}` as keyof typeof CHORDS]?.join(' - ')}
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-500 dark:text-metal-silver mt-1">
+                        {CHORDS[chord as keyof typeof CHORDS]?.join(' - ')}
+                      </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 dark:text-metal-darker" />
                   </button>
@@ -269,7 +201,7 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
               </div>
             </div>
           ) : (
-            // Scale details view
+            // Chord details view
             <div className="flex-1 overflow-y-auto p-4">
               {chordInfo && (
                 <div className="space-y-6">
@@ -279,7 +211,7 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
                         {chordInfo.name}
                       </h3>
                       <p className="text-sm text-gray-500 dark:text-metal-silver mt-1">
-                        {selectedChordType}
+                        {chordInfo.name.split(' ').slice(1).join(' ')}
                       </p>
                     </div>
                     <button
@@ -339,56 +271,6 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
                       </div>
                     </div>
                   </div>
-
-                  {/* Chord positions */}
-                  <div className="bg-white dark:bg-metal-darker border border-gray-200 dark:border-metal-darkest rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                      <GalleryVerticalEnd className="w-5 h-5 text-blue-500 dark:text-metal-blue flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-gray-800 dark:text-metal-lightblue mb-2">
-                          Common Positions
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {chordInfo.positions.slice(0, 6).map((pos, i) => (
-                            <div
-                              key={i}
-                              className="text-sm px-3 py-2 bg-gray-50 dark:bg-metal-darkest rounded"
-                            >
-                              <span className="text-gray-600 dark:text-metal-silver">
-                                String {6 - pos.string}, Fret {pos.fret}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Playing tips */}
-                  <div className="bg-white dark:bg-metal-darker border border-gray-200 dark:border-metal-darkest rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                      <BookOpen className="w-5 h-5 text-blue-500 dark:text-metal-blue flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-gray-800 dark:text-metal-lightblue mb-2">
-                          Playing Tips
-                        </h4>
-                        <ul className="space-y-2 text-gray-600 dark:text-metal-silver">
-                          <li className="flex items-center">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                            Start with the root note ({chordInfo.notes[0]})
-                          </li>
-                          <li className="flex items-center">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                            Practice transitions between open and barre positions
-                          </li>
-                          <li className="flex items-center">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                            Focus on clean, even string ringing
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -397,7 +279,7 @@ const ChordModal: React.FC<ScalesModalProps> = ({ isOpen, onClose, setSelectedCh
           {/* Footer with actions */}
           <div className="border-t border-gray-200 dark:border-metal-darkest p-4 flex justify-between items-center">
             <div>
-              {selectedScale && showDetails && (
+              {selectedChordType && showDetails && (
                 <button
                   onClick={() => setShowDetails(false)}
                   className="px-3 py-1.5 bg-gray-100 dark:bg-metal-darkest text-gray-700 dark:text-metal-silver rounded-md hover:bg-gray-200 dark:hover:bg-metal-dark transition-colors flex items-center space-x-1"
