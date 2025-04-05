@@ -1,0 +1,122 @@
+/* Mobile-specific styles for the fretboard component */
+@media (max-width: 768px) {
+  /* Container styles for vertical orientation */
+  .fretboard-container {
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    perspective: 1000px;
+  }
+
+  .fretboard-scroll-container {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+  }
+
+  /* Rotate the fretboard for vertical orientation */
+  .fretboard-wrapper.vertical-fretboard {
+    transform: rotate(-90deg) translateX(-100%);
+    transform-origin: top left;
+    width: 100vh;
+    height: auto;
+    margin-top: 2rem; /* Add space for fret numbers */
+  }
+
+  /* Fret numbers now appear on the side */
+  .vertical-fretboard .fret-number-row {
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    right: -20px;
+    height: 100%;
+    width: 16px;
+    background-color: transparent;
+    border: none;
+  }
+
+  .vertical-fretboard .fret-number {
+    width: 16px;
+    height: 30px;
+    transform: rotate(90deg);
+  }
+
+  /* String rows need to be wider for better touch targets */
+  .vertical-fretboard .slim-fretboard .string-row {
+    height: 44px; /* Increased height for better touch targets */
+  }
+
+  /* Tuning column adjusted for vertical layout */
+  .vertical-fretboard .slim-fretboard .tuning-column {
+    height: 44px;
+    transform: rotate(90deg);
+  }
+
+  /* Adjust fret positions for vertical layout */
+  .vertical-fretboard .slim-fretboard .fret-position {
+    height: 44px; /* Taller fret positions for touch */
+  }
+
+  /* Counter-rotate note markers to keep them readable */
+  .vertical-fretboard .slim-fretboard .note-marker {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  /* Fix position of fret wires in vertical orientation */
+  .vertical-fretboard .slim-fretboard .fret-wire {
+    height: 100%;
+    width: 1px;
+  }
+
+  /* Adjust string line for vertical orientation */
+  .vertical-fretboard .slim-fretboard .string-line {
+    width: 100%;
+  }
+
+  /* Force horizontal scrolling to be disabled */
+  .vertical-fretboard-container {
+    overflow-x: hidden !important;
+  }
+
+  /* Zoom controls for mobile */
+  .mobile-zoom-controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mobile-zoom-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Portrait orientation styles */
+@media screen and (orientation: portrait) {
+  .fretboard-container {
+    height: 100vh !important;
+  }
+}
+
+/* Landscape orientation styles */
+@media screen and (orientation: landscape) {
+  .fretboard-container {
+    height: 100vh !important;
+    transform: rotate(90deg);
+    transform-origin: top left;
+  }
+}
