@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Info, Play, ChevronRight, GalleryVerticalEnd, PanelRight, BookOpen } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -236,67 +236,6 @@ const getRelatedModes = (scaleName: string): string[] => {
   return [];
 };
 
-// Function to transpose notes based on selected root note
-const transposeNotes = (notes: string[], selectedRoot: string): string => {
-  if (!selectedRoot || !notes.length) return notes.join(' - ');
-  
-  const scaleRoot = notes[0];
-  
-  // If the selected root is the same as the scale root, no need to transpose
-  if (scaleRoot === selectedRoot) return notes.join(' - ');
-  
-  // Calculate the interval between the roots
-  const scaleRootIndex = NOTES.indexOf(scaleRoot);
-  const selectedRootIndex = NOTES.indexOf(selectedRoot);
-  
-  if (scaleRootIndex === -1 || selectedRootIndex === -1) return notes.join(' - ');
-  
-  const interval = (selectedRootIndex - scaleRootIndex + 12) % 12;
-  
-  // Transpose each note
-  const transposedNotes = notes.map(note => {
-    const normalizedNote = normalizeNote(note);
-    const noteIndex = NOTES.indexOf(normalizedNote);
-    
-    if (noteIndex === -1) {
-      return note; // Cannot transpose if note is not recognized
-    }
-    
-    const newIndex = (noteIndex + interval) % 12;
-    return NOTES[newIndex];
-  });
-  
-  return transposedNotes.join(' - ');
-};
-
-/**
- * Normalizes a note to handle flats and sharps
- * @param note The note to normalize
- * @returns The normalized note
- */
-function normalizeNote(note: string): string {
-  // Convert flats to equivalent sharps for consistency
-  // This is a simplified approach and doesn't handle double flats/sharps
-  if (note.includes('b')) {
-    const noteWithoutFlat = note.replace('b', '');
-    const noteIndex = NOTES.indexOf(noteWithoutFlat);
-    
-    if (noteIndex > 0) {
-      return NOTES[noteIndex - 1];
-    } else if (noteIndex === 0) {
-      return NOTES[11]; // Special case: Cb -> B
-    }
-  }
-  
-  // If note has # or is a natural note, return as is if it's in our NOTES array
-  if (NOTES.includes(note)) {
-    return note;
-  }
-  
-  // For any other case, default to C (this is a fallback)
-  return 'C';
-}
-
 // Get scale information with computed properties
 const getScaleInfo = (scaleName: string): ScaleInfo => {
   const notes = SCALES[scaleName as keyof typeof SCALES] || [];
@@ -448,11 +387,11 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
       open={isOpen}
       onOpenChange={onClose}
       size="full"
-      className="min-h-[600px]"
+      className="min-h-[400px]"
     >
-      <div className="flex h-[70vh] max-h-[600px]">
+      <div className="flex flex-col md:flex-row h-auto min-h-[400px] max-h-[80vh]">
         {/* Left sidebar - Scale categories */}
-        <div className="w-52 border-r border-gray-200 dark:border-metal-darkest pr-4">
+        <div className="w-full md:w-52 border-b md:border-b-0 md:border-r border-gray-200 dark:border-metal-darkest pb-4 md:pb-0 md:pr-4">
           <nav className="p-2 space-y-1">
             {scaleCategories.map((category, index) => (
               <button
@@ -465,7 +404,7 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
                 )}
                 onClick={() => {
                   setActiveCategory(index);
-                  setShowDetails(false); // Return to list view when changing categories
+                  setShowDetails(false);
                 }}
               >
                 <span className="flex-1">{category.name}</span>
@@ -476,29 +415,23 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
             ))}
           </nav>
         </div>
-        
+
         {/* Main content area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Scale list */}
           {!showDetails ? (
             <div className="flex-1 overflow-y-auto p-4">
-              <h3 
-                className="text-lg mb-3"
-                style={{
-                  ...subheadingStyle,
-                  color: theme === 'dark' ? '#7986CB' : '#3F51B5' // Adjust color for dark mode
-                }}
-              >
+              <h3 className="text-lg font-bold text-gray-800 dark:text-metal-lightblue mb-4">
                 {scaleCategories[activeCategory].name}
               </h3>
-              
+
               {selectedNote && getFilteredScales(activeCategory).length === 0 && (
                 <div className="text-center py-8" style={bodyTextStyle}>
                   <p className="text-gray-500 dark:text-metal-silver">Only showing options for the selected note: <strong>{selectedNote}</strong></p>
                   <p className="mt-2 text-gray-500 dark:text-metal-silver">No scales found for this root note in this category.</p>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {getFilteredScales(activeCategory).map((scale) => (
                   <div key={scale} className="relative">
@@ -528,9 +461,7 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
                           {scale}
                         </div>
                         <div className="text-gray-500 dark:text-metal-silver mt-1" style={bodyTextStyle}>
-                          {selectedNote 
-                            ? transposeNotes(SCALES[scale as keyof typeof SCALES] || [], selectedNote)
-                            : SCALES[scale as keyof typeof SCALES]?.join(' - ')}
+                          {SCALES[scale as keyof typeof SCALES]?.join(' - ')}
                         </div>
                       </div>
                       <ChevronRight className={cn(
@@ -580,14 +511,9 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
                         }}
                       >
                         Notes: <span className={cn("font-medium", theme === 'dark' ? "text-metal-lightblue" : "text-blue-600")}>
-                          {selectedNote ? transposeNotes(scaleInfo.notes, selectedNote) : scaleInfo.notes.join(' - ')}
+                          {scaleInfo.notes.join(' - ')}
                         </span>
                       </h4>
-                      {selectedNote && selectedNote !== scaleInfo.notes[0] && (
-                        <p className="text-gray-500 dark:text-metal-silver" style={bodyTextStyle}>
-                          Showing {selectedNote} {scaleInfo.type} (transposed from {scaleInfo.name})
-                        </p>
-                      )}
                     </div>
                     <Tooltip content="Play scale notes in sequence">
                       <button
@@ -636,7 +562,7 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
                         >
                           Common Chords
                         </h4>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {scaleInfo.commonChords.map((chord, index) => (
                             <Tooltip key={index} content="Click to hear chord">
                               <button
@@ -646,7 +572,6 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
                                 style={bodyTextStyle}
                               >
                                 {chord}
-                              
                               </button>
                             </Tooltip>
                           ))}
@@ -670,7 +595,7 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
                           >
                             Related Modes
                           </h4>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             {scaleInfo.modes.map((mode, index) => (
                               <Tooltip key={index} content="View this mode's details">
                                 <button
@@ -730,21 +655,18 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
               )}
             </div>
           )}
-          
-          {/* Modal footer with actions */}
+
+          {/* Footer with actions */}
           <div className="border-t border-gray-200 dark:border-metal-darkest p-4 flex justify-between items-center">
             <div>
               {selectedScale && showDetails && (
-                <Tooltip content="Return to scale list">
-                  <button
-                    onClick={() => setShowDetails(false)}
-                    className="px-3 py-1.5 bg-gray-100 dark:bg-metal-darkest text-gray-700 dark:text-metal-silver rounded-md hover:bg-gray-200 dark:hover:bg-metal-dark transition-colors flex items-center space-x-1"
-                    style={bodyTextStyle}
-                  >
-                    <ChevronRight className="w-4 h-4 rotate-180" />
-                    <span>Back to List</span>
-                  </button>
-                </Tooltip>
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="px-3 py-1.5 bg-gray-100 dark:bg-metal-darkest text-gray-700 dark:text-metal-silver rounded-md hover:bg-gray-200 dark:hover:bg-metal-dark transition-colors flex items-center space-x-1"
+                >
+                  <ChevronRight className="w-4 h-4 rotate-180" />
+                  <span>Back to List</span>
+                </button>
               )}
             </div>
             
@@ -752,7 +674,6 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
               <button
                 onClick={onClose}
                 className="px-3 py-1.5 bg-gray-100 dark:bg-metal-darkest text-gray-700 dark:text-metal-silver rounded-md hover:bg-gray-200 dark:hover:bg-metal-dark transition-colors"
-                style={bodyTextStyle}
               >
                 Cancel
               </button>
@@ -761,7 +682,6 @@ const ScalesModal: React.FC<ScalesModalProps> = ({ isOpen, onClose }) => {
                 <button
                   onClick={() => handleSelectScale(selectedScale)}
                   className="px-3 py-1.5 bg-blue-500 dark:bg-metal-blue text-white rounded-md hover:bg-blue-600 dark:hover:bg-metal-lightblue transition-colors"
-                  style={bodyTextStyle}
                 >
                   Apply to Fretboard
                 </button>
