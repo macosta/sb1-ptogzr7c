@@ -8,6 +8,7 @@ import { InteractiveScalesButton } from './InteractiveScalesButton';
 import useGuitarStore from '../../store/useGuitarStore';
 import FretboardDisplayModal from './FretboardDisplayModal';
 import ProfileModal from './ProfileModal';
+import SettingsModal from './SettingsModal';
 
 interface MobileControlPanelProps {
   isOpen: boolean;
@@ -43,10 +44,16 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
 
   const [fretModalOpen, setFretModalOpen] = React.useState(false);
   const [profileOpen, setProfileOpen] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   const handleProfileClick = () => {
     setProfileOpen(true);
     onToggle(); // Close the mobile menu when opening profile
+  };
+
+  const handleSettingsClick = () => {
+    setSettingsOpen(true);
+    onToggle(); // Close the mobile menu when opening settings
   };
 
   return (
@@ -108,6 +115,7 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
             </button>
 
             <button 
+              onClick={handleSettingsClick}
               className="p-2 rounded flex items-center justify-center transition-colors text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
             >
               <Settings className="w-5 h-5" />
@@ -252,6 +260,12 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
       <ProfileModal
         open={profileOpen}
         onOpenChange={setProfileOpen}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
       />
     </div>
   );
