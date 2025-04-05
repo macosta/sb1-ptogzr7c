@@ -95,6 +95,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onOpenChange }) => 
   return (
     <Modal
       title="Settings"
+      description="Application settings and user preferences"
       open={open}
       onOpenChange={onOpenChange}
       className="max-w-4xl"

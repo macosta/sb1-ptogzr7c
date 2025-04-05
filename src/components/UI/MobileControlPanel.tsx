@@ -23,6 +23,8 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
   showChords,
   setShowChords,
 }) => {
+  console.log('[MobileControlPanel] Rendering with props:', { isOpen, showChords });
+
   const {
     mode,
     setMode,
@@ -42,18 +44,40 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
     setScaleSystem,
   } = useGuitarStore();
 
-  const [fretModalOpen, setFretModalOpen] = React.useState(false);
-  const [profileOpen, setProfileOpen] = React.useState(false);
-  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [fretModalOpen, setFretModalOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Debug logging for state changes
+  React.useEffect(() => {
+    console.log('[MobileControlPanel] State update:', {
+      fretModalOpen,
+      profileOpen,
+      settingsOpen,
+      isOpen
+    });
+  }, [fretModalOpen, profileOpen, settingsOpen, isOpen]);
 
   const handleProfileClick = () => {
-    setProfileOpen(true);
-    onToggle(); // Close the mobile menu when opening profile
+    console.log('[MobileControlPanel] Profile button clicked');
+    if (isOpen) {
+      onToggle(); // Close mobile panel first
+    }
+    setTimeout(() => {
+      setProfileOpen(true);
+    }, 100);
   };
 
   const handleSettingsClick = () => {
-    setSettingsOpen(true);
-    onToggle(); // Close the mobile menu when opening settings
+    console.log('[MobileControlPanel] Settings button clicked');
+    console.log('[MobileControlPanel] Current settings state:', { settingsOpen, isOpen });
+    if (isOpen) {
+      onToggle(); // Close mobile panel first
+    }
+    setTimeout(() => {
+      setSettingsOpen(true);
+    }, 100);
+    console.log('[MobileControlPanel] After state update:', { settingsOpen: true, isOpen: false });
   };
 
   return (
@@ -76,7 +100,10 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
                   ? "bg-metal-blue text-white shadow-neon-blue" 
                   : "text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
               )}
-              onClick={() => setMode('tuner')}
+              onClick={() => {
+                console.log('[MobileControlPanel] Tuner button clicked');
+                setMode('tuner');
+              }}
             >
               <Mic className="w-5 h-5" />
             </button>
@@ -88,13 +115,19 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
                   ? "bg-metal-blue text-white shadow-neon-blue" 
                   : "text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
               )}
-              onClick={() => setMode('metronome')}
+              onClick={() => {
+                console.log('[MobileControlPanel] Metronome button clicked');
+                setMode('metronome');
+              }}
             >
               <Clock className="w-5 h-5" />
             </button>
 
             <button 
-              onClick={toggleTheme}
+              onClick={() => {
+                console.log('[MobileControlPanel] Theme toggle clicked');
+                toggleTheme();
+              }}
               className="p-2 rounded flex items-center justify-center transition-colors text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
             >
               {theme === 'light' ? (
@@ -126,7 +159,10 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
 
       {/* Pull handle - now a thin bar */}
       <button
-        onClick={onToggle}
+        onClick={() => {
+          console.log('[MobileControlPanel] Pull handle clicked, toggling panel');
+          onToggle();
+        }}
         className="absolute -bottom-2 left-0 right-0 h-2 bg-white dark:bg-metal-darker border-x border-b border-metal-blue shadow-neon-blue flex items-center justify-center"
       >
         <div className="w-12 h-1 bg-metal-blue rounded-full" />
@@ -239,7 +275,10 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
 
               {/* Fretboard Display Button */}
               <button
-                onClick={() => setFretModalOpen(true)}
+                onClick={() => {
+                  console.log('[MobileControlPanel] Fretboard display button clicked');
+                  setFretModalOpen(true);
+                }}
                 className="w-full mt-4 flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-metal-darkest text-gray-700 dark:text-metal-silver rounded-md hover:bg-gray-200 dark:hover:bg-metal-dark transition-colors"
               >
                 <Sliders className="w-4 h-4" />

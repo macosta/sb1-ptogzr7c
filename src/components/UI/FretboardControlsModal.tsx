@@ -41,6 +41,7 @@ const FretboardControlsModal: React.FC<FretboardControlsModalProps> = ({
   return (
     <Modal
       title="Fretboard Controls"
+      description="Control panel for fretboard display settings and visualization options"
       open={open}
       onOpenChange={onOpenChange}
       size="md"

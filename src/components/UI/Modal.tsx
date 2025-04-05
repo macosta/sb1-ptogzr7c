@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils';
 interface ModalProps {
   children: React.ReactNode;
   title?: string;
+  description?: string;
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -16,6 +17,7 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ 
   children, 
   title, 
+  description,
   trigger, 
   open, 
   onOpenChange,
@@ -53,20 +55,32 @@ const Modal: React.FC<ModalProps> = ({
           className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm animate-in fade-in-0" 
         />
         
-        <Dialog.Content className={cn(
-          "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 duration-200",
-          "bg-white dark:bg-metal-darker rounded-lg shadow-lg",
-          "animate-in fade-in-0 zoom-in-90",
-          sizeClasses[size],
-          isMobile ? "h-[95vh] w-[95vw]" : "max-h-[90vh]",
-          "flex flex-col",
-          className
-        )}>
+        <Dialog.Content 
+          className={cn(
+            "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 duration-200",
+            "bg-white dark:bg-metal-darker rounded-lg shadow-lg",
+            "animate-in fade-in-0 zoom-in-90",
+            sizeClasses[size],
+            isMobile ? "h-[95vh] w-[95vw]" : "max-h-[90vh]",
+            "flex flex-col",
+            className
+          )}
+          aria-describedby={description ? `${title}-description` : undefined}
+        >
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-metal-darkest">
             {title && (
               <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-metal-lightblue font-metal-mania">
                 {title}
               </Dialog.Title>
+            )}
+            
+            {description && (
+              <Dialog.Description
+                id={`${title}-description`}
+                className="sr-only"
+              >
+                {description}
+              </Dialog.Description>
             )}
             
             <Dialog.Close className="p-1.5 rounded-full bg-gray-100 dark:bg-metal-darkest hover:bg-gray-200 dark:hover:bg-metal-dark text-gray-500 dark:text-metal-silver">
