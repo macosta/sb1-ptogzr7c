@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Mic, Clock, Sun, Moon, User, Settings, Sliders } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -7,6 +7,7 @@ import { InteractiveHoverButton } from './InteractiveHoverButton';
 import { InteractiveScalesButton } from './InteractiveScalesButton';
 import useGuitarStore from '../../store/useGuitarStore';
 import FretboardDisplayModal from './FretboardDisplayModal';
+import ProfileModal from './ProfileModal';
 
 interface MobileControlPanelProps {
   isOpen: boolean;
@@ -41,6 +42,12 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
   } = useGuitarStore();
 
   const [fretModalOpen, setFretModalOpen] = React.useState(false);
+  const [profileOpen, setProfileOpen] = React.useState(false);
+
+  const handleProfileClick = () => {
+    setProfileOpen(true);
+    onToggle(); // Close the mobile menu when opening profile
+  };
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
@@ -51,7 +58,7 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
             className="text-2xl font-bold text-white animate-neon-pulse" 
             style={{ fontFamily: "'Metal Mania', cursive" }}
           >
-            Guitar God
+            Guitar Gods
           </span>
 
           <div className="flex items-center space-x-2">
@@ -91,9 +98,13 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
             </button>
 
             <button 
+              onClick={handleProfileClick}
               className="p-2 rounded flex items-center justify-center transition-colors text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
+              aria-label="User Profile"
             >
-              <User className="w-5 h-5" />
+              <div className="w-5 h-5 flex items-center justify-center">
+                <User className="w-5 h-5" />
+              </div>
             </button>
 
             <button 
@@ -235,6 +246,12 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
       <FretboardDisplayModal 
         open={fretModalOpen} 
         onOpenChange={setFretModalOpen}
+      />
+
+      {/* Profile Modal */}
+      <ProfileModal
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
       />
     </div>
   );

@@ -12,10 +12,12 @@ import {
   X
 } from 'lucide-react';
 import SettingsModal from './SettingsModal';
+import ProfileModal from './ProfileModal';
 
 const Navigation: React.FC = () => {
   const { mode, setMode, theme, toggleTheme } = useGuitarStore();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const navigationItems = [
@@ -23,6 +25,11 @@ const Navigation: React.FC = () => {
     { id: 'tuner', name: 'Tuner', icon: Mic },
     { id: 'metronome', name: 'Metronome', icon: Clock },
   ] as const;
+
+  const handleProfileClick = () => {
+    setProfileOpen(true);
+    setMobileMenuOpen(false); // Close mobile menu if open
+  };
   
   return (
     <nav className="bg-gradient-to-r from-metal-darker to-metal-dark border-b border-metal-blue shadow-neon-blue">
@@ -57,10 +64,10 @@ const Navigation: React.FC = () => {
                 "px-4 py-2 flex items-center space-x-2 transition-all duration-300",
                 "uppercase tracking-wider text-sm font-medium",
                 id === 'fretboard' && mode === id 
-                  ? "bg-metal-blue text-white rounded" // Added rounded class here for Fretboard button
+                  ? "bg-metal-blue text-white rounded"
                   : mode === id 
-                    ? "bg-metal-blue text-white shadow-neon-blue rounded" // Keep rounded corners for other active buttons
-                    : "text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker rounded" // Keep rounded for inactive buttons
+                    ? "bg-metal-blue text-white shadow-neon-blue rounded"
+                    : "text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker rounded"
               )}
               style={{ fontFamily: "'Oswald', sans-serif" }}
               onClick={() => setMode(id as Mode)}
@@ -86,8 +93,9 @@ const Navigation: React.FC = () => {
           </button>
           
           <button 
+            onClick={handleProfileClick}
             className="p-2 rounded flex items-center justify-center transition-all duration-300 text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker ml-2"
-            aria-label="User Account"
+            aria-label="User Profile"
           >
             <User className="w-5 h-5" />
           </button>
@@ -150,6 +158,15 @@ const Navigation: React.FC = () => {
               </button>
               
               <button 
+                onClick={handleProfileClick}
+                className="flex-1 p-2 rounded flex items-center justify-center transition-all duration-300 text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker ml-2"
+                aria-label="User Profile"
+              >
+                <User className="w-5 h-5 mr-2" />
+                <span>Profile</span>
+              </button>
+              
+              <button 
                 className="flex-1 p-2 rounded flex items-center justify-center transition-all duration-300 text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker ml-2"
                 onClick={() => {
                   setSettingsOpen(true);
@@ -167,6 +184,9 @@ const Navigation: React.FC = () => {
       
       {/* Settings Modal */}
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+
+      {/* Profile Modal */}
+      <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
     </nav>
   );
 };

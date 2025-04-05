@@ -102,8 +102,23 @@ const useGuitarStore = create<GuitarState>()(
       
       // Actions
       setMode: (mode) => set({ mode }),
-      setTheme: (theme) => set({ theme }),
-      toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+      setTheme: (theme) => {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        set({ theme });
+      },
+      toggleTheme: () => set((state) => {
+        const newTheme = state.theme === 'light' ? 'dark' : 'light';
+        if (newTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        return { theme: newTheme };
+      }),
       setTuning: (tuning) => set({ tuning }),
       setNumFrets: (numFrets) => set({ numFrets }),
       setVisibleFrets: (visibleFrets) => set({ visibleFrets }),
@@ -158,6 +173,14 @@ const useGuitarStore = create<GuitarState>()(
         noteColorMode: state.noteColorMode,
         noteColor: state.noteColor,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Apply theme on page load
+        if (state?.theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      },
     }
   )
 );
