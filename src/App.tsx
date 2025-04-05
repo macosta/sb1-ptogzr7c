@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import useGuitarStore from './store/useGuitarStore';
 import { cn } from './lib/utils';
 import { useStringAudio } from './hooks/useAudio';
-import { Music, Zap } from 'lucide-react';
+import { Music, Zap, Info } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from './components/UI/ToggleGroup';
 import { InteractiveHoverButton } from './components/UI/InteractiveHoverButton';
 import { InteractiveScalesButton } from './components/UI/InteractiveScalesButton';
@@ -33,7 +33,8 @@ function App() {
     mode,
     theme, 
     selectedNote, 
-    selectedScale, 
+    selectedScale,
+    selectedChord,
     fretMarkers, 
     setFretMarkers,
     showTriads,
@@ -53,6 +54,19 @@ function App() {
   const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
   const [controlsModalOpen, setControlsModalOpen] = useState(false);
   const { playString } = useStringAudio();
+
+  // Helper function to get mode name from scale
+  const getModeName = (scale: string) => {
+    if (!scale) return null;
+    if (scale.includes('Major')) return 'Ionian Mode';
+    if (scale.includes('Minor')) return 'Aeolian Mode';
+    if (scale.includes('Dorian')) return 'Dorian Mode';
+    if (scale.includes('Phrygian')) return 'Phrygian Mode';
+    if (scale.includes('Lydian')) return 'Lydian Mode';
+    if (scale.includes('Mixolydian')) return 'Mixolydian Mode';
+    if (scale.includes('Locrian')) return 'Locrian Mode';
+    return null;
+  };
   
   // Check if device is mobile using both user agent and screen size
   useEffect(() => {
@@ -149,14 +163,53 @@ function App() {
           <div className="space-y-6">
             {/* Desktop Control Panel */}
             {!isMobile && (
-              <div className="relative flex flex-col md:flex-row justify-center md:items-center mb-2 py-1 px-2 bg-white dark:bg-metal-darkest border dark:border-metal-blue rounded-lg shadow-sm dark:shadow-neon-blue transition-colors duration-300">
+              <div className="relative flex flex-col md:flex-row justify-between md:items-center mb-2 py-1 px-2 bg-white dark:bg-metal-darkest border dark:border-metal-blue rounded-lg shadow-sm dark:shadow-neon-blue transition-colors duration-300">
+                {/* Musical Information Display */}
+                <div className="flex items-center space-x-2 px-3">
+                  {/* Root Note Pill */}
+                  {selectedNote && (
+                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
+                      <span className="font-medium text-gray-700 dark:text-metal-silver">
+                        Root: <span className="text-metal-blue">{selectedNote}</span>
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Scale Pill */}
+                  {selectedScale && (
+                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
+                      <span className="font-medium text-gray-700 dark:text-metal-silver">
+                        Scale: <span className="text-metal-blue">{selectedScale}</span>
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Mode Pill */}
+                  {selectedScale && getModeName(selectedScale) && (
+                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
+                      <span className="font-medium text-gray-700 dark:text-metal-silver">
+                        Mode: <span className="text-metal-blue">{getModeName(selectedScale)}</span>
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Chord Pill */}
+                  {selectedChord && (
+                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
+                      <span className="font-medium text-gray-700 dark:text-metal-silver">
+                        Chord: <span className="text-metal-blue">{selectedChord}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Controls Button */}
                 <button
                   onClick={() => setControlsModalOpen(true)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-metal-blue text-white hover:bg-metal-lightblue transition-colors flex items-center space-x-2 font-metal-mania"
+                  className="p-2 rounded-full bg-metal-blue text-white hover:bg-metal-lightblue transition-colors flex items-center space-x-2 font-metal-mania ml-auto"
                 >
                   <Zap className="w-4 h-4" />
-                  <span>Fretboard Controls</span>
+                  <span>Fretboard Display</span>
                 </button>
               </div>
             )}
