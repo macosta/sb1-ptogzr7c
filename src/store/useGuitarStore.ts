@@ -13,6 +13,7 @@ interface GuitarState {
   // App state
   mode: Mode;
   theme: Theme;
+  showNotesBar: boolean; // Added this line
   
   // Guitar configuration
   tuning: string[];
@@ -65,6 +66,8 @@ interface GuitarState {
   toggleFretboardOrientation: () => void;
   setNoteColorMode: (mode: NoteColorMode) => void;
   setNoteColor: (color: string) => void;
+  setShowNotesBar: (show: boolean) => void; // Added this line
+  toggleShowNotesBar: () => void; // Added this line
 }
 
 // Function to detect system color scheme preference
@@ -81,6 +84,7 @@ const useGuitarStore = create<GuitarState>()(
       // Default state
       mode: 'fretboard',
       theme: getSystemThemePreference(),
+      showNotesBar: true, // Added this line with default value
       tuning: STANDARD_TUNING,
       numFrets: 24,
       visibleFrets: 24,
@@ -162,6 +166,8 @@ const useGuitarStore = create<GuitarState>()(
       })),
       setNoteColorMode: (mode) => set({ noteColorMode: mode }),
       setNoteColor: (color) => set({ noteColor: color }),
+      setShowNotesBar: (show) => set({ showNotesBar: show }), // Added this line
+      toggleShowNotesBar: () => set((state) => ({ showNotesBar: !state.showNotesBar })), // Added this line
     }),
     {
       name: 'guitar-maestro-storage',
@@ -172,6 +178,7 @@ const useGuitarStore = create<GuitarState>()(
         showChords: state.showChords,
         noteColorMode: state.noteColorMode,
         noteColor: state.noteColor,
+        showNotesBar: state.showNotesBar, // Added this line
       }),
       onRehydrateStorage: () => (state) => {
         // Apply theme on page load

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import useGuitarStore from './store/useGuitarStore';
 import { cn } from './lib/utils';
 import { useStringAudio } from './hooks/useAudio';
-import { Music, Zap, Info } from 'lucide-react';
+import { Music, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from './components/UI/ToggleGroup';
 import { InteractiveHoverButton } from './components/UI/InteractiveHoverButton';
 import { InteractiveScalesButton } from './components/UI/InteractiveScalesButton';
+import MusicalInfoDisplay from './components/UI/MusicalInfoDisplay';
 
 // Components
 import NoteSelector from './components/UI/NoteSelector';
@@ -45,7 +47,9 @@ function App() {
     toggleShowRoot,
     scaleSystem,
     setScaleSystem,
-    setFretboardOrientation
+    setFretboardOrientation,
+    showNotesBar,
+    toggleShowNotesBar
   } = useGuitarStore();
   
   const [showChords, setShowChords] = useState(false);
@@ -54,72 +58,36 @@ function App() {
   const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
   const [controlsModalOpen, setControlsModalOpen] = useState(false);
   const { playString } = useStringAudio();
-
-  // Helper function to get mode name from scale
-  const getModeName = (scale: string) => {
-    if (!scale) return null;
-    if (scale.includes('Major')) return 'Ionian Mode';
-    if (scale.includes('Minor')) return 'Aeolian Mode';
-    if (scale.includes('Dorian')) return 'Dorian Mode';
-    if (scale.includes('Phrygian')) return 'Phrygian Mode';
-    if (scale.includes('Lydian')) return 'Lydian Mode';
-    if (scale.includes('Mixolydian')) return 'Mixolydian Mode';
-    if (scale.includes('Locrian')) return 'Locrian Mode';
-    return null;
-  };
   
-  // Check if device is mobile using both user agent and screen size
   useEffect(() => {
     const checkMobile = () => {
-      // Check screen size first
       const isSmallScreen = window.innerWidth <= 768;
-      
-      // Then check user agent for mobile devices
       const userAgent = navigator.userAgent.toLowerCase();
       const isMobileDevice = /mobile|android|iphone|ipad|ipod|blackberry|windows phone/i.test(userAgent);
-      
-      // Set mobile state if either condition is true
       const mobile = isSmallScreen || isMobileDevice;
-      
-      // Log for debugging
-      console.log('Mobile Detection:', {
-        width: window.innerWidth,
-        isSmallScreen,
-        userAgent,
-        isMobileDevice,
-        mobile
-      });
       
       setIsMobile(mobile);
       
-      // Force vertical orientation for mobile
       if (mobile) {
         setFretboardOrientation('standard');
-        setMobileControlsOpen(false); // Close controls panel by default
+        setMobileControlsOpen(false);
         
-        // Lock screen orientation to portrait if supported
         if (screen.orientation && screen.orientation.lock) {
           screen.orientation.lock('portrait').catch(() => {
-            // Silently fail if orientation lock is not supported
             console.log('Screen orientation lock not supported');
           });
         }
       }
     };
     
-    // Check on initial load
     checkMobile();
-    
-    // Add event listeners
     window.addEventListener('resize', checkMobile);
     window.addEventListener('orientationchange', checkMobile);
     
-    // Force a resize event after a short delay to ensure proper detection
     setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
     }, 100);
     
-    // Cleanup
     return () => {
       window.removeEventListener('resize', checkMobile);
       window.removeEventListener('orientationchange', checkMobile);
@@ -146,12 +114,40 @@ function App() {
       
       {/* Note Selection Bar */}
       <div className={cn(
-        "bg-black dark:bg-metal-darker border-b border-metal-blue shadow-neon-blue p-2",
+        "relative",
         isMobile && "mt-14" // Add margin for mobile header
       )}>
-        <div className="mx-auto">
-          <NoteSelector />
-        </div>
+        <button
+          onClick={toggleShowNotesBar}
+          className="w-full bg-black dark:bg-metal-darker border-b border-metal-blue shadow-neon-blue p-2 flex items-center justify-between"
+        >
+          <div className="flex items-center space-x-2">
+            <Music className="w-4 h-4 text-white" />
+            <span className="text-sm font-medium text-white">Notes Selection</span>
+          </div>
+          {showNotesBar ? (
+            <ChevronUp className="w-4 h-4 text-white" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-white" />
+          )}
+        </button>
+
+        <AnimatePresence initial={false}>
+          {showNotesBar && (
+            <motion.div
+              key="notes-bar"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="overflow-hidden bg-black dark:bg-metal-darker border-b border-metal-blue"
+            >
+              <div className="p-4">
+                <NoteSelector />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     
       <div className={cn(
@@ -165,43 +161,12 @@ function App() {
             {!isMobile && (
               <div className="relative flex flex-col md:flex-row justify-between md:items-center mb-2 py-1 px-2 bg-white dark:bg-metal-darkest border dark:border-metal-blue rounded-lg shadow-sm dark:shadow-neon-blue transition-colors duration-300">
                 {/* Musical Information Display */}
-                <div className="flex items-center space-x-2 px-3">
-                  {/* Root Note Pill */}
-                  {selectedNote && (
-                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
-                      <span className="font-medium text-gray-700 dark:text-metal-silver">
-                        Root: <span className="text-metal-blue">{selectedNote}</span>
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Scale Pill */}
-                  {selectedScale && (
-                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
-                      <span className="font-medium text-gray-700 dark:text-metal-silver">
-                        Scale: <span className="text-metal-blue">{selectedScale}</span>
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Mode Pill */}
-                  {selectedScale && getModeName(selectedScale) && (
-                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
-                      <span className="font-medium text-gray-700 dark:text-metal-silver">
-                        Mode: <span className="text-metal-blue">{getModeName(selectedScale)}</span>
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Chord Pill */}
-                  {selectedChord && (
-                    <div className="flex items-center px-4 py-1.5 bg-gray-100 dark:bg-metal-darker rounded-full border border-gray-200 dark:border-metal-blue">
-                      <span className="font-medium text-gray-700 dark:text-metal-silver">
-                        Chord: <span className="text-metal-blue">{selectedChord}</span>
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <MusicalInfoDisplay
+                  selectedNote={selectedNote}
+                  selectedScale={selectedScale}
+                  selectedChord={selectedChord}
+                  className="px-3"
+                />
 
                 {/* Controls Button */}
                 <button
@@ -238,7 +203,7 @@ function App() {
       {/* Fretboard Display Modal */}
       <FretboardDisplayModal 
         open={fretModalOpen} 
-        onOpenChange={(open) => setFretModalOpen(open)}
+        onOpenChange={setFretModalOpen}
       />
 
       {/* Fretboard Controls Modal */}

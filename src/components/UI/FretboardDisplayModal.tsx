@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import Modal from './Modal';
 import useGuitarStore from '../../store/useGuitarStore';
 import { cn } from '../../lib/utils';
-import { SwitchCamera, Sliders, Repeat, Palette } from 'lucide-react';
+import { SwitchCamera, Sliders, Repeat, Palette, ChevronDown } from 'lucide-react';
 
 interface FretboardDisplayModalProps {
   open: boolean;
@@ -56,13 +56,35 @@ const FretboardDisplayModal: React.FC<FretboardDisplayModalProps> = ({ open, onO
     setNoteColor,
   } = useGuitarStore();
 
+  // Check if we're on mobile
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <Modal
       title="Fretboard Display"
+      description="Control panel for fretboard display settings and visualization options"
       open={open}
       onOpenChange={onOpenChange}
       className="max-w-4xl"
     >
+      {/* Mobile Pull Handle */}
+      {isMobile && (
+        <div className="absolute -top-8 left-0 right-0 h-8 flex items-center justify-center">
+          <div className="w-12 h-1.5 bg-metal-blue rounded-full" />
+          <ChevronDown className="absolute text-metal-blue w-6 h-6" />
+        </div>
+      )}
+
       <div className="space-y-6">
         {/* Fretboard Orientation */}
         <div>

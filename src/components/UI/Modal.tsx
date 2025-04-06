@@ -1,3 +1,4 @@
+{/* Previous Modal.tsx content with updated mobile styles */}
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
@@ -52,7 +53,10 @@ const Modal: React.FC<ModalProps> = ({
       
       <Dialog.Portal>
         <Dialog.Overlay 
-          className="fixed inset-0 bg-black/70 z-50 backdrop-blur-sm animate-in fade-in-0" 
+          className={cn(
+            "fixed inset-0 bg-black/70 z-50 backdrop-blur-sm animate-in fade-in-0",
+            isMobile && "touch-none"
+          )}
         />
         
         <Dialog.Content 
@@ -61,7 +65,7 @@ const Modal: React.FC<ModalProps> = ({
             "bg-white dark:bg-metal-darker rounded-lg shadow-lg",
             "animate-in fade-in-0 zoom-in-90",
             sizeClasses[size],
-            isMobile ? "h-[95vh] w-[95vw]" : "max-h-[90vh]",
+            isMobile ? "mobile-modal" : "max-h-[90vh]",
             "flex flex-col",
             className
           )}
@@ -88,7 +92,10 @@ const Modal: React.FC<ModalProps> = ({
             </Dialog.Close>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className={cn(
+            "flex-1 overflow-y-auto p-4",
+            isMobile && "mobile-modal-content"
+          )}>
             {children}
           </div>
         </Dialog.Content>

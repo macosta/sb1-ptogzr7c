@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Mic, Clock, Sun, Moon, User, Settings, Sliders } from 'lucide-react';
+import { ChevronDown, ChevronUp, Mic, Clock, Sun, Moon, User, Settings, Sliders, Music } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ToggleGroup, ToggleGroupItem } from './ToggleGroup';
 import { InteractiveHoverButton } from './InteractiveHoverButton';
@@ -8,7 +8,7 @@ import { InteractiveScalesButton } from './InteractiveScalesButton';
 import useGuitarStore from '../../store/useGuitarStore';
 import FretboardDisplayModal from './FretboardDisplayModal';
 import ProfileModal from './ProfileModal';
-import SettingsModal from './SettingsModal';
+import NoteSelector from './NoteSelector';
 
 interface MobileControlPanelProps {
   isOpen: boolean;
@@ -23,8 +23,6 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
   showChords,
   setShowChords,
 }) => {
-  console.log('[MobileControlPanel] Rendering with props:', { isOpen, showChords });
-
   const {
     mode,
     setMode,
@@ -42,42 +40,16 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
     toggleShowRoot,
     scaleSystem,
     setScaleSystem,
+    showNotesBar,
+    toggleShowNotesBar
   } = useGuitarStore();
 
   const [fretModalOpen, setFretModalOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
-  // Debug logging for state changes
-  React.useEffect(() => {
-    console.log('[MobileControlPanel] State update:', {
-      fretModalOpen,
-      profileOpen,
-      settingsOpen,
-      isOpen
-    });
-  }, [fretModalOpen, profileOpen, settingsOpen, isOpen]);
 
   const handleProfileClick = () => {
-    console.log('[MobileControlPanel] Profile button clicked');
-    if (isOpen) {
-      onToggle(); // Close mobile panel first
-    }
-    setTimeout(() => {
-      setProfileOpen(true);
-    }, 100);
-  };
-
-  const handleSettingsClick = () => {
-    console.log('[MobileControlPanel] Settings button clicked');
-    console.log('[MobileControlPanel] Current settings state:', { settingsOpen, isOpen });
-    if (isOpen) {
-      onToggle(); // Close mobile panel first
-    }
-    setTimeout(() => {
-      setSettingsOpen(true);
-    }, 100);
-    console.log('[MobileControlPanel] After state update:', { settingsOpen: true, isOpen: false });
+    setProfileOpen(true);
+    onToggle(); // Close the mobile menu when opening profile
   };
 
   return (
@@ -100,10 +72,7 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
                   ? "bg-metal-blue text-white shadow-neon-blue" 
                   : "text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
               )}
-              onClick={() => {
-                console.log('[MobileControlPanel] Tuner button clicked');
-                setMode('tuner');
-              }}
+              onClick={() => setMode('tuner')}
             >
               <Mic className="w-5 h-5" />
             </button>
@@ -115,19 +84,13 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
                   ? "bg-metal-blue text-white shadow-neon-blue" 
                   : "text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
               )}
-              onClick={() => {
-                console.log('[MobileControlPanel] Metronome button clicked');
-                setMode('metronome');
-              }}
+              onClick={() => setMode('metronome')}
             >
               <Clock className="w-5 h-5" />
             </button>
 
             <button 
-              onClick={() => {
-                console.log('[MobileControlPanel] Theme toggle clicked');
-                toggleTheme();
-              }}
+              onClick={toggleTheme}
               className="p-2 rounded flex items-center justify-center transition-colors text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
             >
               {theme === 'light' ? (
@@ -142,13 +105,10 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
               className="p-2 rounded flex items-center justify-center transition-colors text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
               aria-label="User Profile"
             >
-              <div className="w-5 h-5 flex items-center justify-center">
-                <User className="w-5 h-5" />
-              </div>
+              <User className="w-5 h-5" />
             </button>
 
             <button 
-              onClick={handleSettingsClick}
               className="p-2 rounded flex items-center justify-center transition-colors text-metal-silver hover:text-metal-lightblue hover:bg-metal-darker"
             >
               <Settings className="w-5 h-5" />
@@ -157,12 +117,42 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
         </div>
       </div>
 
+      {/* Notes Bar Toggle */}
+      <button
+        onClick={toggleShowNotesBar}
+        className="w-full bg-black dark:bg-metal-darker border-b border-metal-blue shadow-neon-blue p-2 flex items-center justify-between"
+      >
+        <div className="flex items-center space-x-2">
+          <Music className="w-4 h-4 text-white" />
+          <span className="text-sm font-medium text-white">Notes Selection</span>
+        </div>
+        {showNotesBar ? (
+          <ChevronUp className="w-4 h-4 text-white" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-white" />
+        )}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {showNotesBar && (
+          <motion.div
+            key="notes-bar"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden bg-black dark:bg-metal-darker border-b border-metal-blue"
+          >
+            <div className="p-4">
+              <NoteSelector />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Pull handle - now a thin bar */}
       <button
-        onClick={() => {
-          console.log('[MobileControlPanel] Pull handle clicked, toggling panel');
-          onToggle();
-        }}
+        onClick={onToggle}
         className="absolute -bottom-2 left-0 right-0 h-2 bg-white dark:bg-metal-darker border-x border-b border-metal-blue shadow-neon-blue flex items-center justify-center"
       >
         <div className="w-12 h-1 bg-metal-blue rounded-full" />
@@ -275,10 +265,7 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
 
               {/* Fretboard Display Button */}
               <button
-                onClick={() => {
-                  console.log('[MobileControlPanel] Fretboard display button clicked');
-                  setFretModalOpen(true);
-                }}
+                onClick={() => setFretModalOpen(true)}
                 className="w-full mt-4 flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-metal-darkest text-gray-700 dark:text-metal-silver rounded-md hover:bg-gray-200 dark:hover:bg-metal-dark transition-colors"
               >
                 <Sliders className="w-4 h-4" />
@@ -299,12 +286,6 @@ const MobileControlPanel: React.FC<MobileControlPanelProps> = ({
       <ProfileModal
         open={profileOpen}
         onOpenChange={setProfileOpen}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
       />
     </div>
   );
